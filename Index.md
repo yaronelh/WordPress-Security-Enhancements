@@ -8,7 +8,17 @@ This repository collects a few methods, approaches to enhance/harden the default
 
 ### Force Login page Only use SSL
 
-In your 
+### Remove the ability to edit code directtly from WordPress administration
+
+You're probably well aware of the internal WordPress editor that allows you to edit the code of any file, once you successfully logged in to the backend
+this is also one of the first things an attacker will use to change the sites code if successfully passed the login page to the back end of WordPress.
+
+This code snippet will help disabled the ability of editing code from the WordPress backend both for users and attackers that gained unauthorized access to the back gate
+
+```
+
+
+```
 
 
 ## .htaccess changes
@@ -72,25 +82,27 @@ In this discussion my preference is to move the file from the root directory to 
 Note that the only advantage of this method that I'm aware of is to maintain your credentials secure in the case the wp-config.php file was rewritten for some reason
 making this file exposed
 
-
+- Create a new directory in the root of your site name it whatever you want
+- Copy the existing wp-config.php file to that directory
+- Replace the content of the original file with a direction to the new file
 
 
 ```
-## Name of person adding, date added, some rule description
 
-<files wp-config.php>
-order allow,deny
-deny from all
-</files>
+/** Absolute path to the WordPress directory. */
+if ( !defined('ABSPATH') )
+    define('ABSPATH', dirname(__FILE__) . '/');
 
-## END
+/** Location of your WordPress configuration.
+https://wordpress.stackexchange.com/questions/58391/is-moving-wp-config-outside-the-web-root-really-beneficial
+Only makes sure that if by some mistake the config file is overwritten it will not be exposed
+ */ 
 
-## SOME OTHER SET OF RULES
+require_once(ABSPATH . '{Folder name you have chosen}/wp-config.php');
 
 ```
 
-
-
+Make sure that the copied file permission are at least 600 or 640, 400 or 440 are even better if your server allows it.
 
 
 
