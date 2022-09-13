@@ -170,5 +170,6 @@ Most of the plug-ins start with a free version, it's a good place to start with.
 I hope this list of security enhancements will help you increase the security of your website, if you know of another method of increasing security use a pull request to expand, correct, or update the existing data.
 
 
-* **note about this information:** the information in this document is given **AS IS**, and is not intended for novice users.
-Make sure that you know what you're doing, as making the changes above may cause issues on youur particular set up, always backup, try on the staging server, push to live server after thoroughly testing.
+## Final notes on the information
+
+The information in this document is given "**AS IS**", use your own judgment if you decide to apply any of the steps described in this document. this information is not intended for novice users, if you do not know what you're doing you might end up doing more harm than good. As making the changes above may cause issues on your particular set up, always backup, try on the staging server, push to live server after thoroughly testing.
