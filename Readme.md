@@ -151,7 +151,7 @@ Lookiing at your log files you will Notice that some files are really popular wi
 - Under choose an action select "Managed challenge"
 
 ```
-(http.request.uri.path contains "/wp-login.php") or (http.request.uri.path contains "/xmlrpc.php") or (http.request.uri.path contains "/wp-admin/") or (http.request.uri.path contains "/wp-admin/admin-ajax.php") or (http.request.uri.path contains "/wp-admin/theme-editor.php")
+(http.request.uri.path contains "/wp-login.php") or (http.request.uri.path contains "/xmlrpc.php") or (http.request.uri.path contains "/wp-admin/") or (not http.request.uri.path contains "/wp-admin/admin-ajax.php") or (not http.request.uri.path contains "/wp-admin/theme-editor.php")
 ```
 
 ## What about WordPress security Plug-ins?
