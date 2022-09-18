@@ -117,6 +117,8 @@ require_once(ABSPATH . '{Folder name you have chosen}/wp-config.php');
 
 Make sure that the copied file permission are at least 600 or 640, 400 or 440 are even better if your server allows it.
 
+**Additional note:** if you're using `wp-cli` command line this will not work. (Feedback/Further research required on how to make this work with wp-cli If it's even possible)
+
 
 ## Securing WordPress using CloudFlare (Free Plan)
 
