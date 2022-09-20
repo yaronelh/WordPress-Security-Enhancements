@@ -151,10 +151,14 @@ Lookiing at your log files you will Notice that some files are really popular wi
 - Insert the rule set below
 - Click "Use expression builder"
 - Under choose an action select "Managed challenge"
+- If you're using plug-ins that require IP whitelisting (Squirrly SEO for example) exclude them here or in their own rule 
 
 ```
 (http.request.uri.path contains "/wp-login.php") or (http.request.uri.path contains "/xmlrpc.php") or (http.request.uri.path contains "/wp-admin/") or (not http.request.uri.path contains "/wp-admin/admin-ajax.php") or (not http.request.uri.path contains "/wp-admin/theme-editor.php")
 ```
+
+
+
 
 ## What about WordPress security Plug-ins?
 
