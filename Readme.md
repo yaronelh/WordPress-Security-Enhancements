@@ -154,7 +154,7 @@ Lookiing at your log files you will Notice that some files are really popular wi
 - If you're using plug-ins that require IP whitelisting (Squirrly SEO for example) exclude them here or in their own rule 
 
 ```
-(http.request.uri.path contains "/wp-login.php") or (http.request.uri.path contains "/xmlrpc.php") or (http.request.uri.path contains "/wp-admin/") or (not http.request.uri.path contains "/wp-admin/admin-ajax.php") or (not http.request.uri.path contains "/wp-admin/theme-editor.php")
+(http.request.uri.path contains "/wp-login.php") or (http.request.uri.path contains "/xmlrpc.php") or (http.request.uri.path contains "/wp-admin/" and http.request.uri.path ne "/wp-admin/admin-ajax.php" and http.request.uri.path ne "/wp-admin/theme-editor.php")
 ```
 
 
