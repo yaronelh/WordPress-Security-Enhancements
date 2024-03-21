@@ -1,6 +1,6 @@
 # WordPress Security Enhancements 
 
-:warning::warning: As always Before you make any changes ALWAYS create a backup! :warning::warning:
+:warning::warning: ALWAYS have a current backup of your WordPress site! :warning::warning:
 
 This repository collects a few methods, approaches to enhance/harden the default WordPress security setup
 
