@@ -140,6 +140,87 @@ Disable Apps
 Disable Performance
 ```
 
+
+### Using Cloudflare Workers To Block Automated Vulnerability Scanners 
+
+One of the issues in WordPress sites is the automated scans for vulnerabilities, and those are twice the problem. One major issue is that it might find a vulnerability in the scan, and the second is that the scan itself is usually a burst of requests to the server. Depending on your infrastructure, you might not notice it, or it could bring your site to a complete halt, causing a mini denial of service (DoS), as thousands of requests are sent to the origin server in a matter of seconds, those requests are usually non-existent PHP files, hoping to land on a vulnerability.
+
+If you're behind Cloudflare proxy and hoping that automatic bot mitigation might halt this, as of the writing of this text, it will not consider this as a threat trigger. At least not on the free plan.
+But you can somewhat mitigate this by using Cloudflare workers, this worker script monitors incoming requests for .php files that result in 404 Not Found errors. If an IP address makes more than three such requests within an hour, the script blocks that IP for 24 hours by returning a 404 response to any subsequent requests from that IP. This helps mitigate malicious bots scanning by stopping the IP from reaching the origin server after the first three requests. Since the vulnerability scan consists of thousands of files, this ensures that nothing beyond the first three failures reaches your server.
+
+* Replace "YoreKVDatabasename" with an actual KV database name and bind it to the worker in the workers settings.
+
+```
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const ip = request.headers.get('CF-Connecting-IP')
+  const url = new URL(request.url)
+
+  // Check if the IP is blocked
+  const isBlocked = await YoreKVDatabasename.get(`blocked_${ip}`)
+  if (isBlocked) {
+    // Silently block the request by returning a 404 response
+    return new Response(null, { status: 404 })
+  }
+
+  // Prevent infinite recursion by adding a custom header
+  if (request.headers.get('X-Worker-Processed')) {
+    // Forward the request to the origin without further processing
+    return fetch(request)
+  }
+
+  // Clone the request and add the custom header
+  const modifiedRequest = new Request(request)
+  modifiedRequest.headers.set('X-Worker-Processed', 'true')
+
+  // Fetch the original response from the origin server
+  let response
+  try {
+    response = await fetch(modifiedRequest)
+  } catch (err) {
+    console.error(`Fetch error: ${err.message}`)
+    return new Response('Error fetching origin', { status: 500 })
+  }
+
+  // Use the URL object's pathname and check if it ends with '.php' after removing trailing slashes
+  const pathname = url.pathname.replace(/\/+$/, '') // Remove trailing slashes
+
+  // Check if the response is a 404 and the pathname ends with '.php'
+  if (response.status === 404 && pathname.endsWith('.php')) {
+    try {
+      // Get current count from KV
+      let count = await YoreKVDatabasename.get(`count_${ip}`)
+      count = count ? parseInt(count) : 0
+
+      // Increment the count
+      count++
+
+      // Store the updated count back to KV with a TTL (e.g., 1 hour)
+      await YoreKVDatabasename.put(`count_${ip}`, count.toString(), { expirationTtl: 3600 })
+
+      console.log(`IP ${ip} has ${count} 404 .php requests`)
+
+      // Block IP if it exceeds the threshold
+      const threshold = 3
+      if (count >= threshold) {
+        await YoreKVDatabasename.put(`blocked_${ip}`, 'true', { expirationTtl: 86400 }) // Block for 24 hours
+        console.log(`IP ${ip} blocked after exceeding threshold`)
+      }
+    } catch (error) {
+      console.error(`Error processing request: ${error.message}`)
+    }
+  }
+
+  return response
+}
+
+
+```
+
+
 ### Use the firewall to add a layer of protection to common files targeted by attackers
 
 Lookiing at your log files you will Notice that some files are really popular with attackers the `wp-login.php`,`xmlrpc.php`,`admin-ajax.php` Etc. , Let's make it a bit harder to target them using the CloudFlare firewall
@@ -162,7 +243,7 @@ Lookiing at your log files you will Notice that some files are really popular wi
 
 ## What about WordPress security Plug-ins?
 
-Definitely, security plug-ins should be a part of your toolkit especially if you suspect you already been packed, some of these organs can check if WordPress files were changed in some way, in addition to other mitigation strategys such as:
+Definitely, security plug-ins should be a part of your toolkit especially if you suspect you already been hacked, some of these organs can check if WordPress files were changed in some way, in addition to other mitigation strategys such as:
 
 - Number of login attempt allowed
 - Retrieve password attempts allow
