@@ -162,21 +162,32 @@ async function handleRequest(request) {
   // Check if the IP is blocked
   const isBlocked = await YoreKVDatabasename.get(`blocked_${ip}`)
   if (isBlocked) {
-    // Silently block the request by returning a 404 response
     return new Response(null, { status: 404 })
   }
 
-  // Prevent infinite recursion by adding a custom header
+  // Prevent infinite recursion
   if (request.headers.get('X-Worker-Processed')) {
-    // Forward the request to the origin without further processing
     return fetch(request)
   }
 
-  // Clone the request and add the custom header
-  const modifiedRequest = new Request(request)
-  modifiedRequest.headers.set('X-Worker-Processed', 'true')
+  // Clone the original request but only add the X-Worker-Processed header
+  const newHeaders = new Headers(request.headers)
+  newHeaders.set('X-Worker-Processed', 'true')
 
-  // Fetch the original response from the origin server
+  // Create modified request while preserving all original properties
+  const modifiedRequest = new Request(request, {
+    headers: newHeaders,
+    body: request.body,
+    method: request.method,
+    credentials: request.credentials,
+    cache: request.cache,
+    redirect: request.redirect,
+    integrity: request.integrity,
+    keepalive: request.keepalive,
+    signal: request.signal,
+    mode: request.mode
+  })
+
   let response
   try {
     response = await fetch(modifiedRequest)
@@ -185,28 +196,20 @@ async function handleRequest(request) {
     return new Response('Error fetching origin', { status: 500 })
   }
 
-  // Use the URL object's pathname and check if it ends with '.php' after removing trailing slashes
-  const pathname = url.pathname.replace(/\/+$/, '') // Remove trailing slashes
-
-  // Check if the response is a 404 and the pathname ends with '.php'
+   // Handle PHP 404 requests
+  const pathname = url.pathname.replace(/\/+$/, '')
   if (response.status === 404 && pathname.endsWith('.php')) {
     try {
-      // Get current count from KV
       let count = await YoreKVDatabasename.get(`count_${ip}`)
       count = count ? parseInt(count) : 0
-
-      // Increment the count
       count++
 
-      // Store the updated count back to KV with a TTL (e.g., 1 hour)
       await YoreKVDatabasename.put(`count_${ip}`, count.toString(), { expirationTtl: 3600 })
 
       console.log(`IP ${ip} has ${count} 404 .php requests`)
 
-      // Block IP if it exceeds the threshold
-      const threshold = 3
-      if (count >= threshold) {
-        await YoreKVDatabasename.put(`blocked_${ip}`, 'true', { expirationTtl: 86400 }) // Block for 24 hours
+      if (count >= 3) {
+        await YoreKVDatabasename.put(`blocked_${ip}`, 'true', { expirationTtl: 86400 })
         console.log(`IP ${ip} blocked after exceeding threshold`)
       }
     } catch (error) {
