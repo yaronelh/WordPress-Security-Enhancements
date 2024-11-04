@@ -67,7 +67,7 @@ RewriteRule ^wp-includes/theme-compat/ - [F,L]
 
 ### Denying access to wp-config.php
 
-Using the .htaccess file you can deny access to wp-config. Php which contain your database username and password among other critical information.
+Using the .htaccess file, you can deny access to wp-config.php, which contains your database username and password, among other critical information. In addition, you can create a few rules that allow only your server to access particular files that are commonly probed for, denying everybody else.
 
 
 ```php
@@ -78,11 +78,75 @@ order allow,deny
 deny from all
 </files>
 
+<Files xmlrpc.php>
+    Order Allow,Deny
+    Allow from 127.0.0.1
+    Allow from {your servers IP}
+    Deny from all
+</Files>
+
+<Files .htaccess>
+    Order Allow,Deny
+    Allow from 127.0.0.1
+    Allow from {your servers IP}
+    Deny from all
+</Files>
+
+<Files xmlrpc.php>
+    Order Allow,Deny
+    Allow from 127.0.0.1
+    Allow from {your servers IP}
+    Deny from all
+</Files>
+
+<Files php.ini>
+    Order Allow,Deny
+    Allow from 127.0.0.1
+    Allow from {your servers IP}
+    Deny from all
+</Files>
+
 ## END
 
 ## SOME OTHER SET OF RULES
 
 ```
+If you're using the OpenLiteSpeed server, you'll have to use mod_rewrite since OpenLiteSpeed open source doesn't allow for <Files ...></files>
+
+```
+# using mod_rewrite since OpenLiteSpeed open source doesn't allow for <Files...
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # blocks access to wp-config
+    RewriteCond %{REQUEST_URI} ^/wp-config.php$
+    RewriteRule ^wp-config\.php$ - [F,L]
+    
+    # Protect specific files with IP restrictions
+    RewriteCond %{REMOTE_ADDR} !^(127.0.0.1|165.140.157.97)$
+    RewriteRule ^xmlrpc\.php$ - [F,L]
+    
+    RewriteCond %{REMOTE_ADDR} !^(127.0.0.1|165.140.157.97)$
+    RewriteRule ^\.htaccess$ - [F,L]
+    
+    RewriteCond %{REMOTE_ADDR} !^(127.0.0.1|165.140.157.97)$
+    RewriteRule ^php\.ini$ - [F,L]
+    
+    # Existing WordPress core protection rules
+    RewriteRule ^wp-admin/includes/ - [F,L]
+    RewriteRule !^wp-includes/ - [S=3]
+    RewriteRule ^wp-includes/[^/]+\.php$ - [F,L]
+    RewriteRule ^wp-includes/js/tinymce/langs/.+\.php - [F,L]
+    RewriteRule ^wp-includes/theme-compat/ - [F,L]
+</IfModule>
+
+## END
+
+## SOME OTHER SET OF RULES
+
+```
+
 
 
 ## Move your wp-config.php file
