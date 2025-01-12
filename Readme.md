@@ -1,4 +1,5 @@
 # WordPress Security Enhancements 
+(Written by Yaron Elharar)
 
 :warning::warning: ALWAYS have a current backup of your WordPress site! :warning::warning:
 
